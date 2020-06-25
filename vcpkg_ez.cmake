@@ -1,4 +1,8 @@
-#function(vcpkg_setup_ez)
+# Implement thusly:
+#
+#include(FetchContent)
+#
+#macro(vcpkg_setup_ez)
 #	cmake_parse_arguments(
 #		"_arg"
 #		""
@@ -8,10 +12,7 @@
 #	)
 #
 #	if(NOT _arg_TAG)
-#		FetchContent_Declare(
-#			vcpkg_ez
-#			SOURCE_DIR			${_arg_DIR}
-#		)
+#		set(vcpkg_ez_SOURCE_DIR ${_arg_DIR})
 #	else()
 #		FetchContent_Declare(
 #			vcpkg_ez
@@ -20,14 +21,42 @@
 #			SOURCE_DIR			${_arg_DIR}
 #			UPDATE_DISCONNECTED	${_arg_UPDATE_DISCONNECTED}
 #		)
-#	endif()
 #
-#	FetchContent_GetProperties(vcpkg_ez)
+#		FetchContent_GetProperties(vcpkg_ez)
 #
-#	if(NOT vcpkg_ez_POPULATED)
-#		FetchContent_Populate(vcpkg_ez)
+#		if(NOT vcpkg_ez_POPULATED)
+#			FetchContent_Populate(vcpkg_ez)
+#		endif()
 #	endif()
-#endfunction()
+#endmacro()
+#
+#vcpkg_setup_ez(DIR ${VCPKG_EZ_URL}/vcpkg_ez)
+#include(${vcpkg_ez_SOURCE_DIR}/vcpkg_ez.cmake)
+#message(STATUS "${vcpkg_ez_SOURCE_DIR}/vcpkg_ez.cmake")
+#
+#vcpkg_standard_setup(${VCPKG_ROOT_URL}/vcpkg_root
+#	VCPKG_EZ_DIR 
+#		${vcpkg_ez_SOURCE_DIR}
+#	VCPKG_DIR 
+#		${VCPKG_URL}/vcpkg
+#	VCPKG_PORTS_DIR 
+#		${VCPKG_PORTS_URL}/vcpkg_ports
+#	TARGET_TRIPLET
+#		x64-windows-static-md
+#)
+#
+#include(${VCPKG_ROOT_DIR}/scripts/buildsystems/vcpkg.cmake)
+#
+#vcpkg_install(fmt spdlog)
+#
+#vcpkg_executable(vcpkg_test
+#	SOURCES 
+#		vcpkg_test.cpp
+#	VCPACKAGES
+#		fmt spdlog
+#	PRIVATE_DEPENDENCIES
+#		fmt::fmt spdlog::spdlog
+#)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
