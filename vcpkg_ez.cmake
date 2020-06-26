@@ -95,19 +95,6 @@ endmacro()
 
 
 macro(vcpkg_setup)
-	if(DEFINED VCPKG_EXE)
-		message(STATUS "vcpkg already configured.")
-		return()		
-	endif()
-	
-	cmake_parse_arguments(
-		"_arg"
-		""
-		"DIR"
-		""
-		${ARGN}
-	)
-
 	vcpkg_fetch_content(vcpkg ${ARGV})
 endmacro()
 
@@ -260,6 +247,10 @@ macro(vcpkg_standard_setup _arg_ROOT_DIR)
 	#	DIR 
 	#		${_arg_VCPKG_PORTS_DIR}
 	#)
+	
+	message(STATUS "VCPKG: Using vcpkg from: ${_arg_VCPKG_DIR}")
+	message(STATUS "VCPKG: Using vcpkg ports from: ${_arg_VCPKG_PORTS_DIR}")
+	message(STATUS "VCPKG: Using vcpkg build root at: ${_arg_ROOT_DIR}")
 	
 	vcpkg_build(${_arg_VCPKG_DIR})
 
