@@ -217,6 +217,7 @@ macro(vcpkg_standard_setup _arg_ROOT_DIR)
 		${ARGN}
 	)
 
+	message(STATUS "VCPKG: Using vcpkg_ez from: ${vcpkg_ez_SOURCE_DIR}")
 	message(STATUS "VCPKG: Using vcpkg from: ${_arg_VCPKG_DIR}")
 	message(STATUS "VCPKG: Using vcpkg ports from: ${_arg_VCPKG_PORTS_DIR}")
 	message(STATUS "VCPKG: Using vcpkg build root at: ${_arg_ROOT_DIR}")
@@ -239,8 +240,8 @@ macro(vcpkg_common_configure_project _arg_PROJECT_NAME)
 	cmake_parse_arguments(
 		"_arg"
 		""
-		"SOURCES;HEADERS;STATIC_LIBS"
 		""
+		"SOURCES;HEADERS;STATIC_LIBS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;INTERFACE_INCLUDES;VCPACKAGES;PACKAGES;PUBLIC_DEPENDENCIES;PRIVATE_DEPENDENCIES"
 		${ARGN}
 	)
 
@@ -417,8 +418,8 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 	cmake_parse_arguments(
 		"_arg"
 		""
-		"SOURCES;HEADERS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;INTERFACE_INCLUDES;VCPACKAGES;PACKAGES;PUBLIC_DEPENDENCIES;PRIVATE_DEPENDENCIES"
 		""
+		"SOURCES;HEADERS;STATIC_LIBS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;INTERFACE_INCLUDES;VCPACKAGES;PACKAGES;PUBLIC_DEPENDENCIES;PRIVATE_DEPENDENCIES"
 		${ARGN}
 	)
 
@@ -660,8 +661,8 @@ function(vcpkg_executable _arg_PROJECT_NAME)
 	cmake_parse_arguments(
 		"_arg"
 		""
-		"SOURCES;HEADERS"
 		""
+		"SOURCES;HEADERS;STATIC_LIBS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;INTERFACE_INCLUDES;VCPACKAGES;PACKAGES;PUBLIC_DEPENDENCIES;PRIVATE_DEPENDENCIES"
 		${ARGN}
 	)
 
@@ -685,8 +686,8 @@ function(vcpkg_static_library _arg_PROJECT_NAME)
 	cmake_parse_arguments(
 		"_arg"
 		""
-		"SOURCES;HEADERS"
 		""
+		"SOURCES;HEADERS;STATIC_LIBS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;INTERFACE_INCLUDES;VCPACKAGES;PACKAGES;PUBLIC_DEPENDENCIES;PRIVATE_DEPENDENCIES"
 		${ARGN}
 	)
 
@@ -712,8 +713,8 @@ function(vcpkg_interface_library _arg_PROJECT_NAME)
 	cmake_parse_arguments(
 		"_arg"
 		""
-		"HEADERS"
 		""
+		"SOURCES;HEADERS;STATIC_LIBS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;INTERFACE_INCLUDES;VCPACKAGES;PACKAGES;PUBLIC_DEPENDENCIES;PRIVATE_DEPENDENCIES"
 		${ARGN}
 	)
 
@@ -877,8 +878,8 @@ function(vcpkg_static_library_glob _arg_PROJECT_NAME)
 	cmake_parse_arguments(
 		"_arg"
 		""
-		"STATIC_LIBS"
 		""
+		"SOURCES;HEADERS;STATIC_LIBS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;INTERFACE_INCLUDES;VCPACKAGES;PACKAGES;PUBLIC_DEPENDENCIES;PRIVATE_DEPENDENCIES"
 		${ARGN}
 	)
 
@@ -907,8 +908,8 @@ function(vcpkg_add_tests _arg_PROJECT_NAME)
 	cmake_parse_arguments(
 		"_arg"
 		""
-		"TEST_DIRS"
 		""
+		"TEST_DIRS"
 		${ARGN}
 	)
 
