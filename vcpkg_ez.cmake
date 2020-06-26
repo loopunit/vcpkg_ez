@@ -1,65 +1,65 @@
 # Implement thusly:
 #
-#include(FetchContent)
-#
-#macro(vcpkg_setup_ez)
-#	cmake_parse_arguments(
-#		"_arg"
-#		""
-#		"REPO;TAG;DIR;UPDATE_DISCONNECTED"
-#		""
-#		${ARGN}
-#	)
-#
-#	if(NOT _arg_TAG)
-#		set(vcpkg_ez_SOURCE_DIR ${_arg_DIR})
-#	else()
-#		FetchContent_Declare(
-#			vcpkg_ez
-#			GIT_REPOSITORY		${_arg_REPO}
-#			GIT_TAG				${_arg_TAG}
-#			SOURCE_DIR			${_arg_DIR}
-#			UPDATE_DISCONNECTED	${_arg_UPDATE_DISCONNECTED}
+#	include(FetchContent)
+#	
+#	macro(vcpkg_setup_ez)
+#		cmake_parse_arguments(
+#			"_arg"
+#			""
+#			"REPO;TAG;DIR;UPDATE_DISCONNECTED"
+#			""
+#			${ARGN}
 #		)
-#
-#		FetchContent_GetProperties(vcpkg_ez)
-#
-#		if(NOT vcpkg_ez_POPULATED)
-#			FetchContent_Populate(vcpkg_ez)
+#	
+#		if(NOT _arg_TAG)
+#			set(vcpkg_ez_SOURCE_DIR ${_arg_DIR})
+#		else()
+#			FetchContent_Declare(
+#				vcpkg_ez
+#				GIT_REPOSITORY		${_arg_REPO}
+#				GIT_TAG				${_arg_TAG}
+#				SOURCE_DIR			${_arg_DIR}
+#				UPDATE_DISCONNECTED	${_arg_UPDATE_DISCONNECTED}
+#			)
+#	
+#			FetchContent_GetProperties(vcpkg_ez)
+#	
+#			if(NOT vcpkg_ez_POPULATED)
+#				FetchContent_Populate(vcpkg_ez)
+#			endif()
 #		endif()
+#	endmacro()
+#	
+#	if(NOT VCPKG_DEVELOP_ROOT_DIR)
+#		set(VCPKG_DEVELOP_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/vcpkg_root)
+#		message(STATUS "VCPKG: Using local root at ${VCPKG_DEVELOP_ROOT_DIR}")
 #	endif()
-#endmacro()
-#
-#vcpkg_setup_ez(DIR ${VCPKG_EZ_URL}/vcpkg_ez)
-#include(${vcpkg_ez_SOURCE_DIR}/vcpkg_ez.cmake)
-#message(STATUS "${vcpkg_ez_SOURCE_DIR}/vcpkg_ez.cmake")
-#
-#vcpkg_standard_setup(${VCPKG_ROOT_URL}/vcpkg_root
-#	VCPKG_EZ_DIR 
-#		${vcpkg_ez_SOURCE_DIR}
-#	VCPKG_DIR 
-#		${VCPKG_URL}/vcpkg
-#	VCPKG_PORTS_DIR 
-#		${VCPKG_PORTS_URL}/vcpkg_ports
-#	TARGET_TRIPLET
-#		x64-windows-static-md
-#)
-#
-#include(${VCPKG_ROOT_DIR}/scripts/buildsystems/vcpkg.cmake)
-#
-#vcpkg_install(fmt spdlog)
-#
-#vcpkg_executable(vcpkg_test
-#	SOURCES 
-#		vcpkg_test.cpp
-#	VCPACKAGES
-#		fmt spdlog
-#	PRIVATE_DEPENDENCIES
-#		fmt::fmt spdlog::spdlog
-#)
+#	
+#	if(VCPKG_DEVELOP_EZ_DIR)
+#		vcpkg_setup_ez(DIR ${VCPKG_DEVELOP_EZ_DIR})
+#	else()
+#		vcpkg_setup_ez(
+#			REPO ???/vcpkg_ez.git
+#			TAG ???
+#			DIR ${VCPKG_DEVELOP_ROOT_DIR}/vcpkg_ez
+#		)
+#	endif()
+#	
+#	include(${vcpkg_ez_SOURCE_DIR}/vcpkg_ez.cmake)
+#	
+#	vcpkg_executable(vcpkg_test
+#		SOURCES 
+#			vcpkg_test.cpp
+#		VCPACKAGES
+#			???
+#		PRIVATE_DEPENDENCIES
+#			???::???
+#	)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
+
+set(vcpkg_root_SOURCE_DIR ${VCPKG_DEVELOP_ROOT_DIR})
 
 macro(vcpkg_fetch_content _arg_NAME)
 	cmake_parse_arguments(
@@ -71,10 +71,6 @@ macro(vcpkg_fetch_content _arg_NAME)
 	)
 
 	if(NOT _arg_TAG)
-		#FetchContent_Declare(
-		#	${_arg_NAME}
-		#	SOURCE_DIR			${_arg_DIR}
-		#)
 		set(${_arg_NAME}_SOURCE_DIR ${_arg_DIR})
 	else()
 		FetchContent_Declare(
@@ -104,10 +100,8 @@ macro(vcpkg_build _arg_DIR)
 	
 	if(EXISTS ${VCPKG_EXE})
 		set(VCPKG_EXE_EXISTS true)
-		message(STATUS "Vcpkg does exist")
 	else()
 		set(VCPKG_EXE_EXISTS false)
-		message(STATUS "Vcpkg does not exist")
 	endif()
 	
 	if(NOT ${VCPKG_EXE_EXISTS})
@@ -122,9 +116,9 @@ macro(vcpkg_build _arg_DIR)
 endmacro()
 
 
-function(vcpkg_setup_ports)
+macro(vcpkg_setup_ports)
 	vcpkg_fetch_content(vcpkg_ports ${ARGV})
-endfunction()
+endmacro()
 
 
 function(_vcpkg_replace_string filename match_string replace_string)
@@ -144,9 +138,7 @@ function(vcpkg_setup_build_root _arg_ROOT)
 	)
 
 	if(NOT EXISTS ${_arg_ROOT}/scripts)
-		message(STATUS "file(INSTALL ${_arg_VCPKG_DIR}/scripts DESTINATION ${_arg_ROOT})")
 		file(INSTALL ${_arg_VCPKG_DIR}/scripts DESTINATION ${_arg_ROOT})
-		#set(VCPKG_OVERRIDE_FIND_PACKAGE_NAME "vcpkg_find")
 		_vcpkg_replace_string("${_arg_ROOT}/scripts/buildsystems/vcpkg.cmake" "_find_package" "find_package")
 		_vcpkg_replace_string("${_arg_ROOT}/scripts/buildsystems/vcpkg.cmake" [=[macro(${VCPKG_OVERRIDE_FIND_PACKAGE_NAME} name)]=] [=[macro(vcpkg_find name)]=])
 	endif()
@@ -183,22 +175,10 @@ function(vcpkg_install)
 	set(packages ${ARGN})
 	list(TRANSFORM packages APPEND ":${VCPKG_TARGET_TRIPLET}")
 	
-	string(CONCAT join ${packages})
 	string(TOLOWER "${AUTO_VCPKG_GIT_TAG}:${packages}" packages_cache)
 	
-	message(STATUS "vcpkg packages: ${packages}")
-	message(STATUS "vcpkg_install() called to install: ${join}")
+	message(STATUS "vcpkg_install() is installing packages: ${packages}")
 	
-	#message(STATUS "VCPKG_EXE				${_arg_VCPKG_DIR}/vcpkg.exe")
-	#message(STATUS "VCPKG_ROOT_DIR 			${_arg_ROOT_DIR}")
-	#message(STATUS "VCPKG_PORTS_DIR 		${_arg_PORTS_DIR}")
-	#message(STATUS "VCPKG_TARGET_TRIPLET 	${_arg_TARGET_TRIPLET}")
-	#message(STATUS "VCPKG_SCRIPTS_DIR 		${VCPKG_ROOT_DIR}/scripts")
-	#message(STATUS "VCPKG_BUILDTREES_ROOT	${VCPKG_ROOT_DIR}/buildtrees")
-	#message(STATUS "VCPKG_INSTALLED_ROOT	${VCPKG_ROOT_DIR}/installed")
-	#message(STATUS "VCPKG_PACKAGES_ROOT		${VCPKG_ROOT_DIR}/packages")
-	#message(STATUS "VCPKG_DOWNLOADS_ROOT	${VCPKG_ROOT_DIR}/downloads")
-
 	execute_process(
 		COMMAND	"${VCPKG_EXE}" 
 			"--x-buildtrees-root=${VCPKG_BUILDTREES_ROOT}" 
@@ -238,16 +218,6 @@ macro(vcpkg_standard_setup _arg_ROOT_DIR)
 		${ARGN}
 	)
 
-	#vcpkg_setup(
-	#	DIR 
-	#		${_arg_VCPKG_DIR}
-	#)
-	#
-	#vcpkg_setup_ports(
-	#	DIR 
-	#		${_arg_VCPKG_PORTS_DIR}
-	#)
-	
 	message(STATUS "VCPKG: Using vcpkg from: ${_arg_VCPKG_DIR}")
 	message(STATUS "VCPKG: Using vcpkg ports from: ${_arg_VCPKG_PORTS_DIR}")
 	message(STATUS "VCPKG: Using vcpkg build root at: ${_arg_ROOT_DIR}")
@@ -432,7 +402,7 @@ macro(vcpkg_common_configure_project _arg_PROJECT_NAME)
 		if(result)
 			set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 		else()
-			message(SEND_ERROR "IPO is not supported: ${output}.")
+			message(SEND_ERROR "VCPKG: IPO is not supported: ${output}.")
 		endif()
 	endif()
 
@@ -486,7 +456,7 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 		find_package(Doxygen REQUIRED dot)
 		doxygen_add_docs(doxygen-docs ${PROJECT_SOURCE_DIR})
 
-		verbose_message("Doxygen has been setup and documentation is now available.")
+		verbose_message("VCPKG: Doxygen has been setup and documentation is now available.")
 	endif()
 	
 	#
@@ -697,7 +667,7 @@ function(vcpkg_executable _arg_PROJECT_NAME)
 	)
 
 	if(NOT _arg_SOURCES)
-		message(FATAL_ERROR "sources must be defined")
+		message(FATAL_ERROR "VCPKG: sources must be defined")
 	endif()
 	
 	vcpkg_common_configure_project(${_arg_PROJECT_NAME} ${ARGV})
@@ -722,7 +692,7 @@ function(vcpkg_static_library _arg_PROJECT_NAME)
 	)
 
 	if(NOT _arg_SOURCES)
-		message(FATAL_ERROR "sources must be defined")
+		message(FATAL_ERROR "VCPKG: sources must be defined")
 	endif()
 	
 	vcpkg_common_configure_project(${_arg_PROJECT_NAME} ${ARGV})
@@ -749,7 +719,7 @@ function(vcpkg_interface_library _arg_PROJECT_NAME)
 	)
 
 	if(NOT NOT _arg_HEADERS)
-		message(FATAL_ERROR "headers must be defined")
+		message(FATAL_ERROR "VCPKG: headers must be defined")
 	endif()
 	
 	vcpkg_common_configure_project(${_arg_PROJECT_NAME} ${ARGV})
@@ -915,7 +885,7 @@ function(vcpkg_static_library_glob _arg_PROJECT_NAME)
 
 	if(NOT _arg_SOURCES AND NOT _arg_HEADERS)
 		if(NOT _arg_STATIC_LIBS)
-			message(FATAL_ERROR "sources or headers must be defined")
+			message(FATAL_ERROR "VCPKG: static_libs must be defined")
 		endif()
 	endif()
 	
@@ -950,3 +920,65 @@ function(vcpkg_add_tests _arg_PROJECT_NAME)
 		endforeach()
 	endif()
 endfunction()
+
+
+if(NOT VCPKG_DEVELOP_ROOT_DIR)
+	message(FATAL_ERROR "VCPKG: VCPKG_DEVELOP_ROOT_DIR must be defined")
+endif()
+
+
+if(VCPKG_DEVELOP_DIR)
+	vcpkg_setup(DIR ${VCPKG_DEVELOP_DIR})
+else()
+	if(NOT ${VCPKG_DEVELOP_REPO})
+		set(VCPKG_DEVELOP_REPO https://github.com/microsoft/vcpkg.git)
+	endif()
+	if(NOT ${VCPKG_DEVELOP_TAG})
+		set(VCPKG_DEVELOP_TAG 22c8e3a23afc6be45020cd3f8c92bcea783ce8fa)
+	endif()
+	if(NOT ${VCPKG_DEVELOP_DIR})
+		set(VCPKG_DEVELOP_DIR ${VCPKG_DEVELOP_ROOT_DIR}/vcpkg)
+	endif()
+	
+	vcpkg_setup(
+		REPO ${VCPKG_DEVELOP_REPO}
+		TAG ${VCPKG_DEVELOP_TAG}
+		DIR ${VCPKG_DEVELOP_DIR}
+	)
+endif()
+
+
+if(VCPKG_PORTS_DEVELOP_DIR)
+	vcpkg_setup_ports(DIR ${VCPKG_PORTS_DEVELOP_DIR})
+else()
+	if(NOT ${VCPKG_PORTS_DEVELOP_REPO})
+		set(VCPKG_PORTS_DEVELOP_REPO https://github.com/loopunit/covid_ports.git)
+	endif()
+	if(NOT ${VCPKG_PORTS_DEVELOP_TAG})
+		set(VCPKG_PORTS_DEVELOP_TAG 78a2735e5d76994ecd8d44292c42316936d350d6)
+	endif()
+	if(NOT ${VCPKG_PORTS_DEVELOP_DIR})
+		set(VCPKG_PORTS_DEVELOP_DIR ${VCPKG_DEVELOP_ROOT_DIR}/vcpkg_ports)
+	endif()
+
+	vcpkg_setup_ports(
+		REPO ${VCPKG_PORTS_DEVELOP_REPO}
+		TAG ${VCPKG_PORTS_DEVELOP_TAG}
+		DIR ${VCPKG_PORTS_DEVELOP_DIR}
+	)
+endif()
+
+
+vcpkg_standard_setup(${VCPKG_DEVELOP_ROOT_DIR}
+	VCPKG_EZ_DIR 
+		${vcpkg_ez_SOURCE_DIR}
+	VCPKG_DIR 
+		${vcpkg_SOURCE_DIR}
+	VCPKG_PORTS_DIR 
+		${vcpkg_ports_SOURCE_DIR}
+	TARGET_TRIPLET
+		x64-windows-static-md
+)
+
+
+include(${VCPKG_DEVELOP_ROOT_DIR}/scripts/buildsystems/vcpkg.cmake)
