@@ -61,6 +61,12 @@ include(CMakePackageConfigHelpers)
 
 set(vcpkg_root_SOURCE_DIR ${VCPKG_DEVELOP_ROOT_DIR})
 
+if(NOT DEFINED VCPKG_DEVELOP_ENABLED)
+	set(VCPKG_DEVELOP_ENABLED ON)
+endif()
+
+message(STATUS "VCPKG is ${VCPKG_DEVELOP_ENABLED} and using root at: ${vcpkg_root_SOURCE_DIR}")
+
 macro(vcpkg_fetch_content _arg_NAME)
 	cmake_parse_arguments(
 		"_arg"
@@ -91,33 +97,42 @@ endmacro()
 
 
 macro(vcpkg_setup)
-	vcpkg_fetch_content(vcpkg ${ARGV})
+	if(${VCPKG_DEVELOP_ENABLED})
+		vcpkg_fetch_content(vcpkg ${ARGV})
+	endif()
 endmacro()
 
 
 macro(vcpkg_build _arg_DIR)
-	set(VCPKG_EXE ${_arg_DIR}/vcpkg.exe)
-	
-	if(EXISTS ${VCPKG_EXE})
-		set(VCPKG_EXE_EXISTS true)
+	if(${VCPKG_DEVELOP_ENABLED})
+		set(VCPKG_EXE ${_arg_DIR}/vcpkg.exe)
+		
+		if(EXISTS ${VCPKG_EXE})
+			set(VCPKG_EXE_EXISTS true)
+		else()
+			set(VCPKG_EXE_EXISTS false)
+		endif()
+		
+		if(NOT ${VCPKG_EXE_EXISTS})
+			message(STATUS "Building vcpkg to: " ${VCPKG_EXE})
+			execute_process(
+				COMMAND				${_arg_DIR}/bootstrap-vcpkg.bat
+				WORKING_DIRECTORY	${_arg_DIR}
+			)
+		else()
+			message(STATUS "Using prebuilt vcpkg: " ${VCPKG_EXE})
+		endif()
 	else()
 		set(VCPKG_EXE_EXISTS false)
-	endif()
-	
-	if(NOT ${VCPKG_EXE_EXISTS})
-		message(STATUS "Building vcpkg to: " ${VCPKG_EXE})
-		execute_process(
-			COMMAND				${_arg_DIR}/bootstrap-vcpkg.bat
-			WORKING_DIRECTORY	${_arg_DIR}
-		)
-	else()
-		message(STATUS "Using prebuilt vcpkg: " ${VCPKG_EXE})
+		message(STATUS "Vcpkg disabled")
 	endif()
 endmacro()
 
 
 macro(vcpkg_setup_ports)
-	vcpkg_fetch_content(vcpkg_ports ${ARGV})
+	if(${VCPKG_DEVELOP_ENABLED})
+		vcpkg_fetch_content(vcpkg_ports ${ARGV})
+	endif()
 endmacro()
 
 
@@ -209,31 +224,33 @@ endfunction()
 
 
 macro(vcpkg_standard_setup _arg_ROOT_DIR)
-	cmake_parse_arguments(
-		"_arg"
-		""
-		"VCPKG_EZ_DIR;VCPKG_DIR;VCPKG_PORTS_DIR;TARGET_TRIPLET"
-		""
-		${ARGN}
-	)
+	if(${VCPKG_DEVELOP_ENABLED})
+		cmake_parse_arguments(
+			"_arg"
+			""
+			"VCPKG_EZ_DIR;VCPKG_DIR;VCPKG_PORTS_DIR;TARGET_TRIPLET"
+			""
+			${ARGN}
+		)
 
-	message(STATUS "VCPKG: Using vcpkg_ez from: ${vcpkg_ez_SOURCE_DIR}")
-	message(STATUS "VCPKG: Using vcpkg from: ${_arg_VCPKG_DIR}")
-	message(STATUS "VCPKG: Using vcpkg ports from: ${_arg_VCPKG_PORTS_DIR}")
-	message(STATUS "VCPKG: Using vcpkg build root at: ${_arg_ROOT_DIR}")
+		message(STATUS "VCPKG: Using vcpkg_ez from: ${vcpkg_ez_SOURCE_DIR}")
+		message(STATUS "VCPKG: Using vcpkg from: ${_arg_VCPKG_DIR}")
+		message(STATUS "VCPKG: Using vcpkg ports from: ${_arg_VCPKG_PORTS_DIR}")
+		message(STATUS "VCPKG: Using vcpkg build root at: ${_arg_ROOT_DIR}")
 	
-	vcpkg_build(${_arg_VCPKG_DIR})
+		vcpkg_build(${_arg_VCPKG_DIR})
 
-	vcpkg_setup_build_root(${_arg_ROOT_DIR}
-		VCPKG_DIR ${_arg_VCPKG_DIR}
-	)
+		vcpkg_setup_build_root(${_arg_ROOT_DIR}
+			VCPKG_DIR ${_arg_VCPKG_DIR}
+		)
 	
-	vcpkg_setup_globals(
-		VCPKG_DIR 		${_arg_VCPKG_DIR}
-		ROOT_DIR		${_arg_ROOT_DIR}
-		PORTS_DIR		${_arg_VCPKG_PORTS_DIR}
-		TARGET_TRIPLET	${_arg_TARGET_TRIPLET}
-	)
+		vcpkg_setup_globals(
+			VCPKG_DIR 		${_arg_VCPKG_DIR}
+			ROOT_DIR		${_arg_ROOT_DIR}
+			PORTS_DIR		${_arg_VCPKG_PORTS_DIR}
+			TARGET_TRIPLET	${_arg_TARGET_TRIPLET}
+		)
+	endif()
 endmacro()
 
 macro(vcpkg_common_configure_project _arg_PROJECT_NAME)
@@ -309,7 +326,7 @@ macro(vcpkg_common_configure_project _arg_PROJECT_NAME)
 		)
 	endif()
 	
-	if(NOT ${_arg_PROJECT_NAME}_WARNINGS_AS_ERRORS)
+	if(NOT DEFINED ${_arg_PROJECT_NAME}_WARNINGS_AS_ERRORS)
 		set(${_arg_PROJECT_NAME}_WARNINGS_AS_ERRORS OFF)
 	endif()
 
@@ -504,11 +521,18 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 	#
 
 	if(_arg_VCPACKAGES)
-		vcpkg_install(${_arg_VCPACKAGES})
-		
-		foreach(package ${_arg_VCPACKAGES})
-			vcpkg_find(${package} CONFIG REQUIRED)
-		endforeach()
+		if(${VCPKG_DEVELOP_ENABLED})
+			vcpkg_install(${_arg_VCPACKAGES})
+			
+			foreach(package ${_arg_VCPACKAGES})
+				vcpkg_find(${package} CONFIG REQUIRED)
+			endforeach()
+		else()
+			# Find dependencies the standard way
+			foreach(package ${_arg_VCPACKAGES})
+				find_package(package CONFIG REQUIRED)
+			endforeach()
+		endif()
 	endif()
 
 	if(_arg_PACKAGES)
@@ -905,25 +929,29 @@ endfunction()
 
 
 function(vcpkg_add_tests _arg_PROJECT_NAME)
-	cmake_parse_arguments(
-		"_arg"
-		""
-		""
-		"TEST_DIRS"
-		${ARGN}
-	)
+	if(${VCPKG_DEVELOP_ENABLED})	
+		cmake_parse_arguments(
+			"_arg"
+			""
+			""
+			"TEST_DIRS"
+			${ARGN}
+		)
 
-	if(_arg_TEST_DIRS)
-		enable_testing()
-		foreach(test_dir _arg_TEST_DIRS)
-			add_subdirectory(${test_dir})
-		endforeach()
+		if(_arg_TEST_DIRS)
+			enable_testing()
+			foreach(test_dir _arg_TEST_DIRS)
+				add_subdirectory(${test_dir})
+			endforeach()
+		endif()
 	endif()
 endfunction()
 
 
-if(NOT VCPKG_DEVELOP_ROOT_DIR)
-	message(FATAL_ERROR "VCPKG: VCPKG_DEVELOP_ROOT_DIR must be defined")
+if(${VCPKG_DEVELOP_ENABLED})
+	if(NOT VCPKG_DEVELOP_ROOT_DIR)
+		message(FATAL_ERROR "VCPKG: VCPKG_DEVELOP_ROOT_DIR must be defined")
+	endif()
 endif()
 
 
@@ -944,8 +972,7 @@ else()
 		REPO ${VCPKG_DEVELOP_REPO}
 		TAG ${VCPKG_DEVELOP_TAG}
 		DIR ${VCPKG_DEVELOP_DIR}
-	)
-	
+	)	
 endif()
 
 
@@ -982,4 +1009,6 @@ vcpkg_standard_setup(${VCPKG_DEVELOP_ROOT_DIR}
 )
 
 
-include(${VCPKG_DEVELOP_ROOT_DIR}/scripts/buildsystems/vcpkg.cmake)
+if(${VCPKG_DEVELOP_ENABLED})
+	include(${VCPKG_DEVELOP_ROOT_DIR}/scripts/buildsystems/vcpkg.cmake)
+endif()
