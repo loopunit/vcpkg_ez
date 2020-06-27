@@ -489,7 +489,7 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 	)
 
 	if(_arg_PUBLIC_INCLUDES)
-		foreach(incl _arg_PUBLIC_INCLUDES)
+		foreach(incl ${_arg_PUBLIC_INCLUDES})
 			target_include_directories(
 				${_arg_PROJECT_NAME}
 				PUBLIC 
@@ -499,7 +499,7 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 	endif()
 
 	if(_arg_PRIVATE_INCLUDES)
-		foreach(incl _arg_PRIVATE_INCLUDES)
+		foreach(incl ${_arg_PRIVATE_INCLUDES})
 			target_include_directories(
 				${_arg_PROJECT_NAME}
 				PRIVATE
@@ -509,7 +509,7 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 	endif()
 
 	if(_arg__arg_INTERFACE_INCLUDES)
-		foreach(incl _arg_INTERFACE_INCLUDES)
+		foreach(incl ${_arg_INTERFACE_INCLUDES})
 			target_include_directories(
 				${_arg_PROJECT_NAME}
 				INTERFACE
@@ -573,6 +573,14 @@ function(vcpkg_target_install_executable _arg_PROJECT_NAME)
 endfunction()
 
 function(vcpkg_target_install_library _arg_PROJECT_NAME)
+	cmake_parse_arguments(
+		"_arg"
+		""
+		""
+		"SOURCES;HEADERS;STATIC_LIBS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;INTERFACE_INCLUDES;VCPACKAGES;PACKAGES;PUBLIC_DEPENDENCIES;PRIVATE_DEPENDENCIES"
+		${ARGN}
+	)
+
 	install(
 		TARGETS
 			${_arg_PROJECT_NAME}
@@ -601,49 +609,33 @@ function(vcpkg_target_install_library _arg_PROJECT_NAME)
         ${CMAKE_INSTALL_LIBDIR}/cmake/${_arg_PROJECT_NAME}
     )
 
-    #
     # Add version header
-    #
-
     configure_file(
-        ${CMAKE_CURRENT_LIST_DIR}/version.h.in
-        include/${_arg_PROJECT_NAME}/version.h
+        ${vcpkg_ez_SOURCE_DIR}/version.h.in
+        include/${_arg_PROJECT_NAME}-version.h
         @ONLY
     )
 
     install(
       FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/include/${_arg_PROJECT_NAME}/version.h
+        ${CMAKE_CURRENT_BINARY_DIR}/include/${_arg_PROJECT_NAME}-version.h
       DESTINATION
-        include/${_arg_PROJECT_NAME}
+        include
     )
 
-    #
-    # Install the `include` directory
-    #
-
-	if(NOT explicit_headers)
-		if(EXISTS include/${_arg_PROJECT_NAME})
+	# Install public includes
+	if(_arg_PUBLIC_INCLUDES)
+		foreach(incl ${_arg_PUBLIC_INCLUDES})
 			install(
 			  DIRECTORY
-				include/${_arg_PROJECT_NAME}
+				${incl}
 			  DESTINATION
-				include
+				.
 			)
-		endif()
-	else()
-		install(
-		  FILES
-			${_arg_PUBLIC_HEADERS}
-		  DESTINATION
-			include
-		)
+		endforeach()
 	endif()
 
-    #
     # Quick `ConfigVersion.cmake` creation
-    #
-
     write_basic_package_version_file(
         ${_arg_PROJECT_NAME}ConfigVersion.cmake
       VERSION
@@ -667,19 +659,17 @@ function(vcpkg_target_install_library _arg_PROJECT_NAME)
         ${CMAKE_INSTALL_LIBDIR}/cmake/${_arg_PROJECT_NAME}
     )
 
-    #
-    # Generate export header if specified
-    #
-
-    if(${${_arg_PROJECT_NAME}_GENERATE_EXPORT_HEADER})
-      include(GenerateExportHeader)
-      generate_export_header(${_arg_PROJECT_NAME})
-      install(
-        FILES
-          ${PROJECT_BINARY_DIR}/${_arg_PROJECT_NAME}_export.h 
-        DESTINATION
-          include
-      )
+    # TODO: Generate export header if specified
+    #if(${${_arg_PROJECT_NAME}_GENERATE_EXPORT_HEADER})
+    #  include(GenerateExportHeader)
+    #  generate_export_header(${_arg_PROJECT_NAME})
+    #  install(
+    #    FILES
+    #      ${PROJECT_BINARY_DIR}/${_arg_PROJECT_NAME}_export.h 
+    #    DESTINATION
+    #      include
+    #  )
+	#endif()
 
 endfunction()
 
