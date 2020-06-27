@@ -270,7 +270,7 @@ macro(vcpkg_common_configure_project _arg_PROJECT_NAME)
 
 	if(NOT ${_arg_PROJECT_NAME}_MSVC_WARNINGS)
 		set(${_arg_PROJECT_NAME}_MSVC_WARNINGS
-			/W4     # Baseline reasonable warnings
+			/W3     # Baseline reasonable warnings
 			/w14242 # 'identifier': conversion from 'type1' to 'type1', possible loss
 				  # of data
 			/w14254 # 'operator': conversion from 'type1:field_bits' to
