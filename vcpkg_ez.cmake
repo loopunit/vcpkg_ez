@@ -32,7 +32,6 @@
 #	
 #	if(NOT VCPKG_DEVELOP_ROOT_DIR)
 #		set(VCPKG_DEVELOP_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/vcpkg_root)
-#		message(STATUS "VCPKG: Using local root at ${VCPKG_DEVELOP_ROOT_DIR}")
 #	endif()
 #	
 #	if(VCPKG_DEVELOP_EZ_DIR)
@@ -55,6 +54,9 @@
 #		PRIVATE_DEPENDENCIES
 #			???::???
 #	)
+#
+# In vstudio's cmakesettings.json, we can redirect the paths to the proper locations to pull these modules from local paths:
+#	"cmakeCommandArgs": "-DVCPKG_DEVELOP_EZ_DIR=C:/???/vcpkg_ez -DVCPKG_DEVELOP_DIR=C:/???/vcpkg -DVCPKG_PORTS_DEVELOP_DIR=C:/???/vcpkg_ports",
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
