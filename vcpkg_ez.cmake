@@ -485,7 +485,8 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 	target_include_directories(
 		${_arg_PROJECT_NAME}
 		PUBLIC 
-			$<INSTALL_INTERFACE:include>    
+			$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+			$<INSTALL_INTERFACE:include>
 	)
 
 	if(_arg_PUBLIC_INCLUDES)
