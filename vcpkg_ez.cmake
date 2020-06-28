@@ -657,7 +657,7 @@ function(vcpkg_target_install_library _arg_PROJECT_NAME)
     )
 
     configure_package_config_file(
-      ${CMAKE_CURRENT_LIST_DIR}/ProjectConfig.cmake.in
+      ${vcpkg_ez_SOURCE_DIR}/ProjectConfig.cmake.in
       ${CMAKE_CURRENT_BINARY_DIR}/${_arg_PROJECT_NAME}Config.cmake
       INSTALL_DESTINATION 
         ${CMAKE_INSTALL_LIBDIR}/cmake/${_arg_PROJECT_NAME}
