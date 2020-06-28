@@ -195,6 +195,9 @@ function(vcpkg_install)
 	
 	message(STATUS "vcpkg_install() is installing packages: ${packages}")
 	
+	set(ENV{VCPKG_ROOT_DIR} ${VCPKG_ROOT_DIR})
+	set(ENV{VCPKG_TRIPLET} ${VCPKG_TARGET_TRIPLET})
+	
 	execute_process(
 		COMMAND	"${VCPKG_EXE}" 
 			"--x-buildtrees-root=${VCPKG_BUILDTREES_ROOT}" 
@@ -211,6 +214,9 @@ endfunction()
 
 function(vcpkg_update)
 	vcpkg_get_paths()
+
+	set(ENV{VCPKG_ROOT_DIR} ${VCPKG_ROOT_DIR})
+	set(ENV{VCPKG_TRIPLET} ${VCPKG_TARGET_TRIPLET})
 
 	execute_process(
 		COMMAND	"${VCPKG_EXE}" 
@@ -528,19 +534,24 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 			vcpkg_install(${_arg_VCPACKAGES})
 			
 			foreach(package ${_arg_VCPACKAGES})
-				vcpkg_find(${package} CONFIG REQUIRED)
+				if(NOT ${VCPKG_DEVELOP_IS_PORT})
+					vcpkg_find(${package} CONFIG REQUIRED)
+				else()
+					find_package(${package} CONFIG REQUIRED)
+				endif()
 			endforeach()
+			
 		else()
 			# Find dependencies the standard way
 			foreach(package ${_arg_VCPACKAGES})
-				find_package(package CONFIG REQUIRED)
+				find_package(${package} CONFIG REQUIRED)
 			endforeach()
 		endif()
 	endif()
 
 	if(_arg_PACKAGES)
 		foreach(package ${_arg_PACKAGES})
-			find_package(package CONFIG REQUIRED)
+			find_package(${package} CONFIG REQUIRED)
 		endforeach()
 	endif()
 
