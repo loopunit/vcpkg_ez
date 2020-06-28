@@ -71,8 +71,12 @@ if(NOT DEFINED VCPKG_DEVELOP_IS_PORT)
 	set(VCPKG_DEVELOP_IS_PORT OFF)
 endif()
 
+if(NOT DEFINED VCPKG_DEVELOP_TRIPLET)
+	set(VCPKG_DEVELOP_TRIPLET x64-windows-static-md)
+endif()
+
 message(STATUS "VCPKG is ${VCPKG_DEVELOP_ENABLED} and using root at: ${vcpkg_root_SOURCE_DIR}")
-message(STATUS "VCPKG port mode is set to ${VCPKG_DEVELOP_IS_PORT}")
+message(STATUS "VCPKG port mode is set to ${VCPKG_DEVELOP_IS_PORT} and building for ${VCPKG_DEVELOP_TRIPLET}")
 
 macro(vcpkg_fetch_content _arg_NAME)
 	cmake_parse_arguments(
@@ -175,6 +179,7 @@ macro(vcpkg_setup_globals)
 	cmake_parse_arguments(_arg "" "VCPKG_DIR;ROOT_DIR;PORTS_DIR;TARGET_TRIPLET" "" ${ARGN})
 	
 	set(VCPKG_EXE				${_arg_VCPKG_DIR}/vcpkg.exe		CACHE INTERNAL "VCPKG_EXE")
+	set(VCPKG_DIR				${_arg_VCPKG_DIR}				CACHE INTERNAL "VCPKG_DIR")
 	set(VCPKG_ROOT_DIR 			${_arg_ROOT_DIR} 				CACHE INTERNAL "VCPKG_ROOT_DIR")
 	set(VCPKG_PORTS_DIR 		${_arg_PORTS_DIR} 				CACHE INTERNAL "VCPKG_PORTS_DIR")
 	set(VCPKG_TARGET_TRIPLET 	${_arg_TARGET_TRIPLET} 			CACHE INTERNAL "VCPKG_TARGET_TRIPLET")
@@ -200,8 +205,18 @@ function(vcpkg_install)
 	
 	message(STATUS "vcpkg_install() is installing packages: ${packages}")
 	
+	set(ENV{VCPKG_EZ_DIR} ${vcpkg_ez_SOURCE_DIR})
+	set(ENV{VCPKG_DIR} ${VCPKG_DIR})
+	set(ENV{VCPKG_PORTS_DIR} ${VCPKG_PORTS_DIR})
 	set(ENV{VCPKG_ROOT_DIR} ${VCPKG_ROOT_DIR})
 	set(ENV{VCPKG_TRIPLET} ${VCPKG_TARGET_TRIPLET})
+	set(ENV{VCPKG_KEEP_ENV_VARS} "VCPKG_EZ_DIR;VCPKG_DIR;VCPKG_PORTS_DIR;VCPKG_ROOT_DIR;VCPKG_TRIPLET")
+
+	#message(STATUS "VCPKG: ENV{VCPKG_EZ_DIR} ${vcpkg_ez_SOURCE_DIR})  ")
+	#message(STATUS "VCPKG: ENV{VCPKG_DIR} ${VCPKG_DIR})               ")
+	#message(STATUS "VCPKG: ENV{VCPKG_PORTS_DIR} ${VCPKG_PORTS_DIR})    ")
+	#message(STATUS "VCPKG: ENV{VCPKG_ROOT_DIR} ${VCPKG_ROOT_DIR})     ")
+	#message(STATUS "VCPKG: ENV{VCPKG_TRIPLET} ${VCPKG_TARGET_TRIPLET})")
 	
 	execute_process(
 		COMMAND	"${VCPKG_EXE}" 
@@ -217,23 +232,24 @@ function(vcpkg_install)
 endfunction()
 
 
-function(vcpkg_update)
-	vcpkg_get_paths()
-
-	set(ENV{VCPKG_ROOT_DIR} ${VCPKG_ROOT_DIR})
-	set(ENV{VCPKG_TRIPLET} ${VCPKG_TARGET_TRIPLET})
-
-	execute_process(
-		COMMAND	"${VCPKG_EXE}" 
-			"--x-buildtrees-root=${VCPKG_BUILDTREES_ROOT}" 
-			"--x-install-root=${VCPKG_INSTALLED_ROOT}" 
-			"--x-packages-root=${VCPKG_PACKAGES_ROOT}" 
-#			"--x-scripts-root=${VCPKG_SCRIPTS_DIR}" 
-			"--downloads-root=${VCPKG_DOWNLOADS_ROOT}" 
-			"--overlay-ports=${VCPKG_PORTS_DIR}" 
-			"update"
-	)
-endfunction()
+#function(vcpkg_update)
+#	vcpkg_get_paths()
+#
+#	set(ENV{VCPKG_EZ_DIR} ${vcpkg_ez_SOURCE_DIR})
+#	set(ENV{VCPKG_ROOT_DIR} ${VCPKG_ROOT_DIR})
+#	set(ENV{VCPKG_TRIPLET} ${VCPKG_TARGET_TRIPLET})
+#
+#	execute_process(
+#		COMMAND	"${VCPKG_EXE}" 
+#			"--x-buildtrees-root=${VCPKG_BUILDTREES_ROOT}" 
+#			"--x-install-root=${VCPKG_INSTALLED_ROOT}" 
+#			"--x-packages-root=${VCPKG_PACKAGES_ROOT}" 
+##			"--x-scripts-root=${VCPKG_SCRIPTS_DIR}" 
+#			"--downloads-root=${VCPKG_DOWNLOADS_ROOT}" 
+#			"--overlay-ports=${VCPKG_PORTS_DIR}" 
+#			"update"
+#	)
+#endfunction()
 
 
 macro(vcpkg_standard_setup _arg_ROOT_DIR)
@@ -1014,9 +1030,8 @@ vcpkg_standard_setup(${VCPKG_DEVELOP_ROOT_DIR}
 	VCPKG_PORTS_DIR 
 		${vcpkg_ports_SOURCE_DIR}
 	TARGET_TRIPLET
-		x64-windows-static-md
+		${VCPKG_DEVELOP_TRIPLET}
 )
-
 
 if(${VCPKG_DEVELOP_ENABLED})
 	include(${VCPKG_DEVELOP_ROOT_DIR}/scripts/buildsystems/vcpkg.cmake)
