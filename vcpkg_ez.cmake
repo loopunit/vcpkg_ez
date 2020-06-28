@@ -67,7 +67,12 @@ if(NOT DEFINED VCPKG_DEVELOP_ENABLED)
 	set(VCPKG_DEVELOP_ENABLED ON)
 endif()
 
+if(NOT DEFINED VCPKG_DEVELOP_IS_PORT)
+	set(VCPKG_DEVELOP_IS_PORT OFF)
+endif()
+
 message(STATUS "VCPKG is ${VCPKG_DEVELOP_ENABLED} and using root at: ${vcpkg_root_SOURCE_DIR}")
+message(STATUS "VCPKG port mode is set to ${VCPKG_DEVELOP_IS_PORT}")
 
 macro(vcpkg_fetch_content _arg_NAME)
 	cmake_parse_arguments(
