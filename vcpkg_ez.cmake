@@ -1,62 +1,153 @@
-# Implement thusly:
+# # Implement thusly:
 #
-#	include(FetchContent)
-#	
-#	macro(vcpkg_setup_ez)
-#		cmake_parse_arguments(
-#			"_arg"
-#			""
-#			"REPO;TAG;DIR;UPDATE_DISCONNECTED"
-#			""
-#			${ARGN}
-#		)
-#	
-#		if(NOT _arg_TAG)
-#			set(vcpkg_ez_SOURCE_DIR ${_arg_DIR})
-#		else()
-#			FetchContent_Declare(
-#				vcpkg_ez
-#				GIT_REPOSITORY		${_arg_REPO}
-#				GIT_TAG				${_arg_TAG}
-#				SOURCE_DIR			${_arg_DIR}
-#				UPDATE_DISCONNECTED	${_arg_UPDATE_DISCONNECTED}
-#			)
-#	
-#			FetchContent_GetProperties(vcpkg_ez)
-#	
-#			if(NOT vcpkg_ez_POPULATED)
-#				FetchContent_Populate(vcpkg_ez)
-#			endif()
-#		endif()
-#	endmacro()
-#	
-#	if(NOT VCPKG_DEVELOP_ROOT_DIR)
-#		set(VCPKG_DEVELOP_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/vcpkg_root)
-#	endif()
-#	
-#	if(VCPKG_DEVELOP_EZ_DIR)
-#		vcpkg_setup_ez(DIR ${VCPKG_DEVELOP_EZ_DIR})
-#	else()
-#		vcpkg_setup_ez(
-#			REPO ???/vcpkg_ez.git
-#			TAG ???
-#			DIR ${VCPKG_DEVELOP_ROOT_DIR}/vcpkg_ez
-#		)
-#	endif()
-#	
-#	include(${vcpkg_ez_SOURCE_DIR}/vcpkg_ez.cmake)
-#	
-#	vcpkg_executable(vcpkg_test
-#		SOURCES 
-#			vcpkg_test.cpp
-#		VCPACKAGES
-#			???
-#		PRIVATE_DEPENDENCIES
-#			???::???
-#	)
+# include(FetchContent)
+# 
+# macro(vcpkg_setup_ez)
+# 	cmake_parse_arguments(
+# 		"_arg"
+# 		""
+# 		"REPO;TAG;DIR;UPDATE_DISCONNECTED"
+# 		""
+# 		${ARGN}
+# 	)
+# 
+# 	if(NOT _arg_TAG)
+# 		set(vcpkg_ez_SOURCE_DIR ${_arg_DIR})
+# 	else()
+# 		FetchContent_Declare(
+# 			vcpkg_ez
+# 			GIT_REPOSITORY		${_arg_REPO}
+# 			GIT_TAG				${_arg_TAG}
+# 			SOURCE_DIR			${_arg_DIR}
+# 			UPDATE_DISCONNECTED	${_arg_UPDATE_DISCONNECTED}
+# 		)
+# 
+# 		FetchContent_GetProperties(vcpkg_ez)
+# 
+# 		if(NOT vcpkg_ez_POPULATED)
+# 			FetchContent_Populate(vcpkg_ez)
+# 		endif()
+# 	endif()
+# endmacro()
+# 
+# if(NOT VCPKG_DEVELOP_ROOT_DIR)
+# 	set(VCPKG_DEVELOP_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/vcpkg_root)
+# endif()
+# 
+# if(VCPKG_DEVELOP_EZ_DIR)
+# 	vcpkg_setup_ez(DIR ${VCPKG_DEVELOP_EZ_DIR})
+# else()
+# 	vcpkg_setup_ez(
+# 		REPO ???/vcpkg_ez.git
+# 		TAG ???
+# 		DIR ${VCPKG_DEVELOP_ROOT_DIR}/vcpkg_ez
+# 	)
+# endif()
+# 
+# include(${vcpkg_ez_SOURCE_DIR}/vcpkg_ez.cmake)
+# 
+# vcpkg_static_library(${PROJECT_NAME}
+# 	HEADERS
+# 		include/???.h
+# 	SOURCES 
+# 		src/???.cpp
+# 	PUBLIC_INCLUDES
+# 		${CMAKE_CURRENT_LIST_DIR}/include
+# 	PRIVATE_INCLUDES
+# 		${CMAKE_CURRENT_LIST_DIR}/src
+# 	VCPACKAGES
+# 		???
+# 	PRIVATE_DEPENDENCIES
+# 		???::???
+# )
+# 
+# if(NOT ${VCPKG_DEVELOP_IS_PORT})
+# 	vcpkg_executable(${PROJECT_NAME}_test
+# 		SOURCES
+# 			test/test.cpp
+# 		PRIVATE_INCLUDES
+# 			${CMAKE_CURRENT_LIST_DIR}/test
+# 		VCPACKAGES
+# 			catch2
+# 		PRIVATE_DEPENDENCIES
+# 			Catch2::Catch2 ???
+# 	)
+# endif()
 #
-# In vstudio's cmakesettings.json, we can redirect the paths to the proper locations to pull these modules from local paths:
-#	"cmakeCommandArgs": "-DVCPKG_DEVELOP_EZ_DIR=C:/???/vcpkg_ez -DVCPKG_DEVELOP_DIR=C:/???/vcpkg -DVCPKG_PORTS_DEVELOP_DIR=C:/???/vcpkg_ports",
+# # In vstudio's cmakesettings.json, we can redirect the paths to the proper locations to pull these modules from local paths:
+#	"cmakeCommandArgs": "-DVCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT=D:/???/dev_port_lookup.cmake -DVCPKG_DEVELOP_EZ_DIR=D:/???/vcpkg_ez -DVCPKG_DEVELOP_DIR=D:/???/vcpkg -DVCPKG_PORTS_DEVELOP_DIR=D:/???/vcpkg_ports",
+#
+# # An example portfile for a project using this framework:
+#
+# vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
+# 
+# include($ENV{VCPKG_PORT_LOOKUP_SCRIPT} OPTIONAL RESULT_VARIABLE USE_DEVELOPMENT_PORT)
+# 
+# if(USE_DEVELOPMENT_PORT)
+# 	vcpkg_developer_port_redirect(${PORT})
+# 	set(SOURCE_PATH ${${PORT}_SOURCE_PATH})
+# endif()
+# 
+# if(NOT SOURCE_PATH)
+# 	set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/${PORT})
+# 	
+# 	# Pull from git
+# 	if(NOT EXISTS "${SOURCE_PATH}/.git")
+# 		message(STATUS "Cloning and fetching submodules into ${SOURCE_PATH}")
+# 		
+# 		vcpkg_execute_required_process(
+# 			COMMAND ${GIT} clone --depth 1 https://???/???.git ${SOURCE_PATH}
+# 			WORKING_DIRECTORY ${SOURCE_PATH}
+# 			LOGNAME clone
+# 		)
+# 	
+# 		vcpkg_execute_required_process(
+# 			COMMAND ${GIT} config core.longpaths true
+# 			WORKING_DIRECTORY ${SOURCE_PATH}
+# 			LOGNAME config
+# 		)
+# 	
+# 		vcpkg_execute_required_process(
+# 			COMMAND ${GIT} submodule update --init --recursive
+# 			WORKING_DIRECTORY ${SOURCE_PATH}
+# 			LOGNAME submodule_update
+# 		)
+# 	endif()
+# 	
+# 	vcpkg_execute_required_process(
+# 		COMMAND ${GIT} checkout --recurse-submodules HEAD
+# 		WORKING_DIRECTORY ${SOURCE_PATH}
+# 		LOGNAME checkout
+# 	)
+# endif()
+# 
+# vcpkg_configure_cmake(
+#     SOURCE_PATH ${SOURCE_PATH}
+#     PREFER_NINJA
+# 	OPTIONS
+# 		-DVCPKG_DEVELOP_IS_PORT=ON
+# 		-DVCPKG_DEVELOP_ROOT_DIR=$ENV{VCPKG_ROOT_DIR}
+# 		-DVCPKG_DEVELOP_EZ_DIR=$ENV{VCPKG_EZ_DIR}
+# 		-DVCPKG_DEVELOP_DIR=$ENV{VCPKG_DIR}
+# 		-DVCPKG_PORTS_DEVELOP_DIR=$ENV{VCPKG_PORTS_DIR}
+# 		-DVCPKG_DEVELOP_TRIPLET=$ENV{VCPKG_TRIPLET}
+# )
+# 
+# vcpkg_install_cmake()
+# 
+# file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
+# 
+# if(EXISTS "${CURRENT_PACKAGES_DIR}/lib/cmake/${PORT}")
+#     vcpkg_fixup_cmake_targets(CONFIG_PATH lib/cmake/${PORT})
+# elseif(EXISTS "${CURRENT_PACKAGES_DIR}/lib/${PORT}/cmake")
+#     vcpkg_fixup_cmake_targets(CONFIG_PATH lib/${PORT}/cmake)
+# endif()
+# 
+# vcpkg_copy_pdbs()
+# 
+# file(INSTALL ${SOURCE_PATH}/README.md DESTINATION ${CURRENT_PACKAGES_DIR}/share/${PORT} RENAME copyright)
+#
+# # Someone with real cmake experience might be able to simplify a lot of this, obvs.
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -73,6 +164,10 @@ endif()
 
 if(NOT DEFINED VCPKG_DEVELOP_TRIPLET)
 	set(VCPKG_DEVELOP_TRIPLET x64-windows-static-md)
+endif()
+
+if(NOT DEFINED VCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT)
+	set(VCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT ${vcpkg_ez_SOURCE_DIR}/dev_port_lookup.cmake)
 endif()
 
 message(STATUS "VCPKG is ${VCPKG_DEVELOP_ENABLED} and using root at: ${vcpkg_root_SOURCE_DIR}")
@@ -210,7 +305,8 @@ function(vcpkg_install)
 	set(ENV{VCPKG_PORTS_DIR} ${VCPKG_PORTS_DIR})
 	set(ENV{VCPKG_ROOT_DIR} ${VCPKG_ROOT_DIR})
 	set(ENV{VCPKG_TRIPLET} ${VCPKG_TARGET_TRIPLET})
-	set(ENV{VCPKG_KEEP_ENV_VARS} "VCPKG_EZ_DIR;VCPKG_DIR;VCPKG_PORTS_DIR;VCPKG_ROOT_DIR;VCPKG_TRIPLET")
+	set(ENV{VCPKG_PORT_LOOKUP_SCRIPT} ${VCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT})
+	set(ENV{VCPKG_KEEP_ENV_VARS} "VCPKG_EZ_DIR;VCPKG_DIR;VCPKG_PORTS_DIR;VCPKG_ROOT_DIR;VCPKG_TRIPLET;VCPKG_PORT_LOOKUP_SCRIPT")
 
 	#message(STATUS "VCPKG: ENV{VCPKG_EZ_DIR} ${vcpkg_ez_SOURCE_DIR})  ")
 	#message(STATUS "VCPKG: ENV{VCPKG_DIR} ${VCPKG_DIR})               ")
