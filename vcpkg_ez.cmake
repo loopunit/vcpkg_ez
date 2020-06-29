@@ -77,77 +77,11 @@
 # # In vstudio's cmakesettings.json, we can redirect the paths to the proper locations to pull these modules from local paths:
 #	"cmakeCommandArgs": "-DVCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT=D:/???/dev_port_lookup.cmake -DVCPKG_DEVELOP_EZ_DIR=D:/???/vcpkg_ez -DVCPKG_DEVELOP_DIR=D:/???/vcpkg -DVCPKG_PORTS_DEVELOP_DIR=D:/???/vcpkg_ports",
 #
-# # An example portfile for a project using this framework:
+# Ports can be locally overridden using VCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT, copy dev_port_lookup.cmake to the project root & modify.
 #
-# vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
-# 
-# include($ENV{VCPKG_PORT_LOOKUP_SCRIPT} OPTIONAL RESULT_VARIABLE USE_DEVELOPMENT_PORT)
-# 
-# if(USE_DEVELOPMENT_PORT)
-# 	vcpkg_developer_port_redirect(${PORT})
-# 	set(SOURCE_PATH ${${PORT}_SOURCE_PATH})
-# endif()
-# 
-# if(NOT SOURCE_PATH)
-# 	set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/${PORT})
-# 	
-# 	# Pull from git
-# 	if(NOT EXISTS "${SOURCE_PATH}/.git")
-# 		message(STATUS "Cloning and fetching submodules into ${SOURCE_PATH}")
-# 		
-# 		vcpkg_execute_required_process(
-# 			COMMAND ${GIT} clone --depth 1 https://???/???.git ${SOURCE_PATH}
-# 			WORKING_DIRECTORY ${SOURCE_PATH}
-# 			LOGNAME clone
-# 		)
-# 	
-# 		vcpkg_execute_required_process(
-# 			COMMAND ${GIT} config core.longpaths true
-# 			WORKING_DIRECTORY ${SOURCE_PATH}
-# 			LOGNAME config
-# 		)
-# 	
-# 		vcpkg_execute_required_process(
-# 			COMMAND ${GIT} submodule update --init --recursive
-# 			WORKING_DIRECTORY ${SOURCE_PATH}
-# 			LOGNAME submodule_update
-# 		)
-# 	endif()
-# 	
-# 	vcpkg_execute_required_process(
-# 		COMMAND ${GIT} checkout --recurse-submodules HEAD
-# 		WORKING_DIRECTORY ${SOURCE_PATH}
-# 		LOGNAME checkout
-# 	)
-# endif()
-# 
-# vcpkg_configure_cmake(
-#     SOURCE_PATH ${SOURCE_PATH}
-#     PREFER_NINJA
-# 	OPTIONS
-# 		-DVCPKG_DEVELOP_IS_PORT=ON
-# 		-DVCPKG_DEVELOP_ROOT_DIR=$ENV{VCPKG_ROOT_DIR}
-# 		-DVCPKG_DEVELOP_EZ_DIR=$ENV{VCPKG_EZ_DIR}
-# 		-DVCPKG_DEVELOP_DIR=$ENV{VCPKG_DIR}
-# 		-DVCPKG_PORTS_DEVELOP_DIR=$ENV{VCPKG_PORTS_DIR}
-# 		-DVCPKG_DEVELOP_TRIPLET=$ENV{VCPKG_TRIPLET}
-# )
-# 
-# vcpkg_install_cmake()
-# 
-# file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
-# 
-# if(EXISTS "${CURRENT_PACKAGES_DIR}/lib/cmake/${PORT}")
-#     vcpkg_fixup_cmake_targets(CONFIG_PATH lib/cmake/${PORT})
-# elseif(EXISTS "${CURRENT_PACKAGES_DIR}/lib/${PORT}/cmake")
-#     vcpkg_fixup_cmake_targets(CONFIG_PATH lib/${PORT}/cmake)
-# endif()
-# 
-# vcpkg_copy_pdbs()
-# 
-# file(INSTALL ${SOURCE_PATH}/README.md DESTINATION ${CURRENT_PACKAGES_DIR}/share/${PORT} RENAME copyright)
+# See portfile.cmake for portfile implementation
 #
-# # Someone with real cmake experience might be able to simplify a lot of this, obvs.
+# Someone with real cmake experience might be able to simplify a lot of this, obvs.
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -1101,10 +1035,10 @@ if(VCPKG_PORTS_DEVELOP_DIR)
 	vcpkg_setup_ports(DIR ${VCPKG_PORTS_DEVELOP_DIR})
 else()
 	if(NOT VCPKG_PORTS_DEVELOP_REPO)
-		set(VCPKG_PORTS_DEVELOP_REPO https://github.com/loopunit/covid_ports.git)
+		set(VCPKG_PORTS_DEVELOP_REPO https://gitlab.ct.activision.com/shg_audio/vcpkg_ports.git)
 	endif()
 	if(NOT VCPKG_PORTS_DEVELOP_TAG)
-		set(VCPKG_PORTS_DEVELOP_TAG 78a2735e5d76994ecd8d44292c42316936d350d6)
+		set(VCPKG_PORTS_DEVELOP_TAG d24823ddd504dd45a56575d91da7f5fa222ed930)
 	endif()
 	if(NOT VCPKG_PORTS_DEVELOP_DIR)
 		set(VCPKG_PORTS_DEVELOP_DIR ${VCPKG_DEVELOP_ROOT_DIR}/vcpkg_ports)
