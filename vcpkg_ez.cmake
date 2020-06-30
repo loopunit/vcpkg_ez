@@ -586,23 +586,23 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 			
 			foreach(package ${_arg_VCPACKAGES})
 				if(NOT ${VCPKG_DEVELOP_IS_PORT})
-					vcpkg_find(${package} CONFIG REQUIRED)
+					vcpkg_find(${package} CONFIG) # TODO: Needs to have a fallback or some way for this to not fail on interface libraries
 				else()
-					find_package(${package} CONFIG REQUIRED)
+					find_package(${package} CONFIG) # TODO: Needs to have a fallback or some way for this to not fail on interface libraries
 				endif()
 			endforeach()
 			
 		else()
 			# Find dependencies the standard way
 			foreach(package ${_arg_VCPACKAGES})
-				find_package(${package} CONFIG REQUIRED)
+				find_package(${package} CONFIG) # TODO: Needs to have a fallback or some way for this to not fail on interface libraries
 			endforeach()
 		endif()
 	endif()
 
 	if(_arg_PACKAGES)
 		foreach(package ${_arg_PACKAGES})
-			find_package(${package} CONFIG REQUIRED)
+			find_package(${package} CONFIG) # TODO: Needs to have a fallback or some way for this to not fail on interface libraries
 		endforeach()
 	endif()
 
