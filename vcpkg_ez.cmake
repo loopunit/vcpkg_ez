@@ -490,7 +490,6 @@ macro(vcpkg_common_configure_project _arg_PROJECT_NAME)
 endmacro()
 
 function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
-
 	cmake_parse_arguments(
 		"_arg"
 		""
@@ -749,6 +748,8 @@ function(vcpkg_executable _arg_PROJECT_NAME)
 		message(FATAL_ERROR "VCPKG: sources must be defined")
 	endif()
 	
+	set(${_arg_PROJECT_NAME}_BUILD_HEADERS_ONLY OFF)
+	
 	vcpkg_common_configure_project(${_arg_PROJECT_NAME} ${ARGV})
 	
 	add_executable(${_arg_PROJECT_NAME} ${_arg_SOURCES} ${_arg_HEADERS})
@@ -773,6 +774,8 @@ function(vcpkg_static_library _arg_PROJECT_NAME)
 	if(NOT _arg_SOURCES)
 		message(FATAL_ERROR "VCPKG: sources must be defined")
 	endif()
+	
+	set(${_arg_PROJECT_NAME}_BUILD_HEADERS_ONLY OFF)
 	
 	vcpkg_common_configure_project(${_arg_PROJECT_NAME} ${ARGV})
 	
@@ -801,6 +804,8 @@ function(vcpkg_interface_library _arg_PROJECT_NAME)
 		message(FATAL_ERROR "VCPKG: headers must be defined")
 	endif()
 	
+	set(${_arg_PROJECT_NAME}_BUILD_HEADERS_ONLY ON)
+
 	vcpkg_common_configure_project(${_arg_PROJECT_NAME} ${ARGV})
 	
 	add_library(${_arg_PROJECT_NAME} ${_arg_HEADERS})
@@ -968,6 +973,8 @@ function(vcpkg_static_library_glob _arg_PROJECT_NAME)
 		endif()
 	endif()
 	
+	set(${_arg_PROJECT_NAME}_BUILD_HEADERS_ONLY OFF)
+
 	vcpkg_common_configure_project(${_arg_PROJECT_NAME} ${ARGV})
 	
 	merge_static_libs(
