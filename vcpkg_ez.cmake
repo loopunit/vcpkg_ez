@@ -261,26 +261,110 @@ function(vcpkg_install)
 
 endfunction()
 
+add_custom_target(vcpkg_ez_update
+	COMMAND	
+		${CMAKE_COMMAND} -E env
+		"VCPKG_EZ_DIR=${vcpkg_ez_SOURCE_DIR}"
+		"VCPKG_DIR=${VCPKG_DIR}"
+		"VCPKG_PORTS_DIR=${VCPKG_PORTS_DIR}"
+		"VCPKG_ROOT_DIR=${VCPKG_ROOT_DIR}"
+		"VCPKG_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+		"VCPKG_PORT_LOOKUP_SCRIPT=${VCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT}"
+		"VCPKG_KEEP_ENV_VARS=\"VCPKG_EZ_DIR;VCPKG_DIR;VCPKG_PORTS_DIR;VCPKG_ROOT_DIR;VCPKG_TRIPLET;VCPKG_PORT_LOOKUP_SCRIPT\""
+		"${VCPKG_EXE}" 
+		"--x-buildtrees-root=${VCPKG_BUILDTREES_ROOT}" 
+		"--x-install-root=${VCPKG_INSTALLED_ROOT}" 
+		"--x-packages-root=${VCPKG_PACKAGES_ROOT}" 
+#		"--x-scripts-root=${VCPKG_SCRIPTS_DIR}" 
+		"--downloads-root=${VCPKG_DOWNLOADS_ROOT}" 
+		"--overlay-ports=${VCPKG_PORTS_DIR}" 
+		"update"
+)
 
-#function(vcpkg_update)
-#	vcpkg_get_paths()
-#
-#	set(ENV{VCPKG_EZ_DIR} ${vcpkg_ez_SOURCE_DIR})
-#	set(ENV{VCPKG_ROOT_DIR} ${VCPKG_ROOT_DIR})
-#	set(ENV{VCPKG_TRIPLET} ${VCPKG_TARGET_TRIPLET})
-#
-#	execute_process(
-#		COMMAND	"${VCPKG_EXE}" 
-#			"--x-buildtrees-root=${VCPKG_BUILDTREES_ROOT}" 
-#			"--x-install-root=${VCPKG_INSTALLED_ROOT}" 
-#			"--x-packages-root=${VCPKG_PACKAGES_ROOT}" 
-##			"--x-scripts-root=${VCPKG_SCRIPTS_DIR}" 
-#			"--downloads-root=${VCPKG_DOWNLOADS_ROOT}" 
-#			"--overlay-ports=${VCPKG_PORTS_DIR}" 
-#			"update"
-#	)
-#endfunction()
+add_custom_target(vcpkg_ez_upgrade
+	COMMAND	
+		${CMAKE_COMMAND} -E env
+		"VCPKG_EZ_DIR=${vcpkg_ez_SOURCE_DIR}"
+		"VCPKG_DIR=${VCPKG_DIR}"
+		"VCPKG_PORTS_DIR=${VCPKG_PORTS_DIR}"
+		"VCPKG_ROOT_DIR=${VCPKG_ROOT_DIR}"
+		"VCPKG_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+		"VCPKG_PORT_LOOKUP_SCRIPT=${VCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT}"
+		"VCPKG_KEEP_ENV_VARS=\"VCPKG_EZ_DIR;VCPKG_DIR;VCPKG_PORTS_DIR;VCPKG_ROOT_DIR;VCPKG_TRIPLET;VCPKG_PORT_LOOKUP_SCRIPT\""
+		"${VCPKG_EXE}" 
+		"--x-buildtrees-root=${VCPKG_BUILDTREES_ROOT}" 
+		"--x-install-root=${VCPKG_INSTALLED_ROOT}" 
+		"--x-packages-root=${VCPKG_PACKAGES_ROOT}" 
+#		"--x-scripts-root=${VCPKG_SCRIPTS_DIR}" 
+		"--downloads-root=${VCPKG_DOWNLOADS_ROOT}" 
+		"--overlay-ports=${VCPKG_PORTS_DIR}" 
+		"--no-dry-run"
+		"upgrade"
+)
 
+add_custom_target(vcpkg_ez_remove_outdated
+	COMMAND	
+		${CMAKE_COMMAND} -E env
+		"VCPKG_EZ_DIR=${vcpkg_ez_SOURCE_DIR}"
+		"VCPKG_DIR=${VCPKG_DIR}"
+		"VCPKG_PORTS_DIR=${VCPKG_PORTS_DIR}"
+		"VCPKG_ROOT_DIR=${VCPKG_ROOT_DIR}"
+		"VCPKG_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+		"VCPKG_PORT_LOOKUP_SCRIPT=${VCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT}"
+		"VCPKG_KEEP_ENV_VARS=\"VCPKG_EZ_DIR;VCPKG_DIR;VCPKG_PORTS_DIR;VCPKG_ROOT_DIR;VCPKG_TRIPLET;VCPKG_PORT_LOOKUP_SCRIPT\""
+		"${VCPKG_EXE}" 
+		"--x-buildtrees-root=${VCPKG_BUILDTREES_ROOT}" 
+		"--x-install-root=${VCPKG_INSTALLED_ROOT}" 
+		"--x-packages-root=${VCPKG_PACKAGES_ROOT}" 
+#		"--x-scripts-root=${VCPKG_SCRIPTS_DIR}" 
+		"--downloads-root=${VCPKG_DOWNLOADS_ROOT}" 
+		"--overlay-ports=${VCPKG_PORTS_DIR}" 
+		"remove --outdated"
+)
+
+function(vcpkg_ez_install_target _arg_PACKAGE)
+	add_custom_target(vcpkg_ez_install_${_arg_PACKAGE}
+		COMMAND	
+			${CMAKE_COMMAND} -E env
+			"VCPKG_EZ_DIR=${vcpkg_ez_SOURCE_DIR}"
+			"VCPKG_DIR=${VCPKG_DIR}"
+			"VCPKG_PORTS_DIR=${VCPKG_PORTS_DIR}"
+			"VCPKG_ROOT_DIR=${VCPKG_ROOT_DIR}"
+			"VCPKG_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+			"VCPKG_PORT_LOOKUP_SCRIPT=${VCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT}"
+			"VCPKG_KEEP_ENV_VARS=\"VCPKG_EZ_DIR;VCPKG_DIR;VCPKG_PORTS_DIR;VCPKG_ROOT_DIR;VCPKG_TRIPLET;VCPKG_PORT_LOOKUP_SCRIPT\""
+			"${VCPKG_EXE}" 
+			"--x-buildtrees-root=${VCPKG_BUILDTREES_ROOT}" 
+			"--x-install-root=${VCPKG_INSTALLED_ROOT}" 
+			"--x-packages-root=${VCPKG_PACKAGES_ROOT}" 
+	#		"--x-scripts-root=${VCPKG_SCRIPTS_DIR}" 
+			"--downloads-root=${VCPKG_DOWNLOADS_ROOT}" 
+			"--overlay-ports=${VCPKG_PORTS_DIR}" 
+			install ${_arg_PACKAGE}:${VCPKG_TARGET_TRIPLET}
+	)
+endfunction()
+
+function(vcpkg_ez_uninstall_target _arg_PACKAGE)
+	add_custom_target(vcpkg_ez_uninstall_${_arg_PACKAGE}
+		COMMAND	
+			${CMAKE_COMMAND} -E env
+			"VCPKG_EZ_DIR=${vcpkg_ez_SOURCE_DIR}"
+			"VCPKG_DIR=${VCPKG_DIR}"
+			"VCPKG_PORTS_DIR=${VCPKG_PORTS_DIR}"
+			"VCPKG_ROOT_DIR=${VCPKG_ROOT_DIR}"
+			"VCPKG_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+			"VCPKG_PORT_LOOKUP_SCRIPT=${VCPKG_DEVELOPMENT_PORT_LOOKUP_SCRIPT}"
+			"VCPKG_KEEP_ENV_VARS=\"VCPKG_EZ_DIR;VCPKG_DIR;VCPKG_PORTS_DIR;VCPKG_ROOT_DIR;VCPKG_TRIPLET;VCPKG_PORT_LOOKUP_SCRIPT\""
+			"${VCPKG_EXE}" 
+			"--x-buildtrees-root=${VCPKG_BUILDTREES_ROOT}" 
+			"--x-install-root=${VCPKG_INSTALLED_ROOT}" 
+			"--x-packages-root=${VCPKG_PACKAGES_ROOT}" 
+	#		"--x-scripts-root=${VCPKG_SCRIPTS_DIR}" 
+			"--downloads-root=${VCPKG_DOWNLOADS_ROOT}" 
+			"--overlay-ports=${VCPKG_PORTS_DIR}" 
+			remove ${_arg_PACKAGE}:${VCPKG_TARGET_TRIPLET}
+	)
+endfunction()
 
 macro(vcpkg_standard_setup _arg_ROOT_DIR)
 	if(${VCPKG_DEVELOP_ENABLED})
