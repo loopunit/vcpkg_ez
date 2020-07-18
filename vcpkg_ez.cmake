@@ -622,12 +622,14 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 	# Set the build/user include directories
 	#
 	
-	target_include_directories(
-		${_arg_PROJECT_NAME}
-		PUBLIC 
-			$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-			$<INSTALL_INTERFACE:include>
-	)
+	if (NOT ${_arg_SCOPE} STREQUAL INTERFACE)
+		target_include_directories(
+			${_arg_PROJECT_NAME}
+			PUBLIC 
+				$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+				$<INSTALL_INTERFACE:include>
+		)
+	endif()
 
 	if(_arg_PUBLIC_INCLUDES)
 		foreach(incl ${_arg_PUBLIC_INCLUDES})
@@ -649,7 +651,7 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 		endforeach()
 	endif()
 
-	if(_arg__arg_INTERFACE_INCLUDES)
+	if(_arg_INTERFACE_INCLUDES)
 		foreach(incl ${_arg_INTERFACE_INCLUDES})
 			target_include_directories(
 				${_arg_PROJECT_NAME}
@@ -658,6 +660,7 @@ function(vcpkg_target_common _arg_PROJECT_NAME _arg_SCOPE)
 			)
 		endforeach()
 	endif()
+
 
 	#
 	# Model project dependencies 
@@ -863,7 +866,7 @@ function(vcpkg_static_library _arg_PROJECT_NAME)
 	
 	vcpkg_common_configure_project(${_arg_PROJECT_NAME} ${ARGV})
 	
-	add_library(${_arg_PROJECT_NAME} ${_arg_SOURCES} ${_arg_HEADERS})
+	add_library(${_arg_PROJECT_NAME} STATIC ${_arg_SOURCES} ${_arg_HEADERS})
 	
 	target_compile_features(${_arg_PROJECT_NAME} PUBLIC ${${_arg_PROJECT_NAME}_CXX_STANDARD})
 	
@@ -884,17 +887,17 @@ function(vcpkg_interface_library _arg_PROJECT_NAME)
 		${ARGN}
 	)
 
-	if(NOT NOT _arg_HEADERS)
-		message(FATAL_ERROR "VCPKG: headers must be defined")
+	if(NOT _arg_INTERFACE_INCLUDES)
+		message(FATAL_ERROR "VCPKG: interface headers must be defined")
 	endif()
 	
 	set(${_arg_PROJECT_NAME}_BUILD_HEADERS_ONLY ON)
 
 	vcpkg_common_configure_project(${_arg_PROJECT_NAME} ${ARGV})
 	
-	add_library(${_arg_PROJECT_NAME} ${_arg_HEADERS})
+	add_library(${_arg_PROJECT_NAME} INTERFACE)
 	
-	target_compile_features(${_arg_PROJECT_NAME} INTERFACE ${${_arg_PROJECT_NAME}_CXX_STANDARD})
+	#target_compile_features(${_arg_PROJECT_NAME} INTERFACE ${${_arg_PROJECT_NAME}_CXX_STANDARD})
 	
 	vcpkg_target_common(${_arg_PROJECT_NAME} INTERFACE ${ARGV})
 	
