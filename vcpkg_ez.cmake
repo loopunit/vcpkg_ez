@@ -724,7 +724,7 @@ endfunction()
 function(vcpkg_target_install_library _arg_PROJECT_NAME)
 	cmake_parse_arguments(
 		"_arg"
-		""
+		"INSTALL_CONFIG_HEADER"
 		""
 		"SOURCES;HEADERS;STATIC_LIBS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;INTERFACE_INCLUDES;VCPACKAGES;PACKAGES;PUBLIC_DEPENDENCIES;PRIVATE_DEPENDENCIES"
 		${ARGN}
@@ -758,19 +758,21 @@ function(vcpkg_target_install_library _arg_PROJECT_NAME)
         ${CMAKE_INSTALL_LIBDIR}/cmake/${_arg_PROJECT_NAME}
     )
 
-    # Add version header
-    configure_file(
-        ${vcpkg_ez_SOURCE_DIR}/version.h.in
-        include/${_arg_PROJECT_NAME}-version.h
-        @ONLY
-    )
+	if(_arg_INSTALL_CONFIG_HEADER)
+		# Add version header
+		configure_file(
+			${vcpkg_ez_SOURCE_DIR}/version.h.in
+			include/${_arg_PROJECT_NAME}-version.h
+			@ONLY
+		)
 
-    install(
-      FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/include/${_arg_PROJECT_NAME}-version.h
-      DESTINATION
-        include
-    )
+		install(
+		  FILES
+			${CMAKE_CURRENT_BINARY_DIR}/include/${_arg_PROJECT_NAME}-version.h
+		  DESTINATION
+			include
+		)
+	endif()
 
 	# Install public includes
 	if(_arg_PUBLIC_INCLUDES)
@@ -795,7 +797,7 @@ function(vcpkg_target_install_library _arg_PROJECT_NAME)
 			)
 		endforeach()
 	endif()
-	
+
     # Quick `ConfigVersion.cmake` creation
     write_basic_package_version_file(
         ${_arg_PROJECT_NAME}ConfigVersion.cmake
