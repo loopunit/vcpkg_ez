@@ -784,6 +784,18 @@ function(vcpkg_target_install_library _arg_PROJECT_NAME)
 		endforeach()
 	endif()
 
+	# Install interface includes
+	if(_arg_INTERFACE_INCLUDES)
+		foreach(incl ${_arg_INTERFACE_INCLUDES})
+			install(
+			  DIRECTORY
+				${incl}
+			  DESTINATION
+				.
+			)
+		endforeach()
+	endif()
+	
     # Quick `ConfigVersion.cmake` creation
     write_basic_package_version_file(
         ${_arg_PROJECT_NAME}ConfigVersion.cmake
